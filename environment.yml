@@ -1,0 +1,37 @@
+name: docker_env
+
+channels:
+  - conda-forge
+  - defaults
+
+dependencies:
+  - xarray 
+  - dataclasses 
+  # - napari 
+  - matplotlib 
+  - tqdm 
+  - scikit-image
+  - addict
+  - jax
+  - jax[gpu]
+  - dask[distributed]
+  - jupyterlab
+  - nodejs
+  - pip
+  - dill
+  - scipy
+  - scikit-learn
+  - pip:
+    - dask-image
+    - dask-memusage
+    - patchify 
+    #- xtiff==0.7.6  << Incompatible with upgraded tifffile library.
+    - git+git://github.com/agvaughan/xtiff@master # Can revert to normal xtiff if if merged into main at 
+    - tifffile
+    # jax[cuda] wheel, as specified by https://github.com/google/jax
+    # Equivalent to:
+    # pip install --upgrade "jax[cuda]" -f https://storage.googleapis.com/jax-releases/jax_releases.html  
+    # Note: wheels only available on linux.
+    # - https://storage.googleapis.com/jax-releases/cuda11/jaxlib-0.3.2%2Bcuda11.cudnn82-cp38-none-manylinux2010_x86_64.whl
+
+
