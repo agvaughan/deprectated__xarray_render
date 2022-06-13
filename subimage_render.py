@@ -32,12 +32,14 @@ def initialize_image(coords_min,coords_max,coord_size,chunk_size,verbose=False):
             print(key,val)
     coords_vector = np.linspace(coords_min,coords_max,coord_size)
     dims_coords_dict  = {'x': coords_vector, 'y':coords_vector,'z':coords_vector}                     
-
-    arr = da.array(
     
-    xarr = xr.DataArray(dask.,
+    arr = da.zeros(coord_size,coord_size,coord_size,dtype=arr_dtype)
+
+    xarr = (xr.DataArray(arr,
                        dims=dims_coords_dict.keys(),
-                       coords=dims_coords_dict).astype(arr_dtype).chunk(chunks=(chunk_size,chunk_size,chunk_size))
+                       coords=dims_coords_dict)
+                       .astype(arr_dtype)
+                       .chunk(chunks=(chunk_size,chunk_size,chunk_size)) )
     return xarr
 
 @jax.jit
@@ -51,13 +53,16 @@ def jax_broadcast_pdf_fn(x_loc,y_loc,z_loc,xx,yy,zz):
 
 @jax.jit
 def jax_broadcast_reduce_pdf_fn(x_locs,y_locs,z_locs,jxx,jyy,jzz):
-
-    For points in (xx,yy,zz), calculate distance to target-points(s!) at (x_loc,y_loc,z_loc).
-
+    '''
+    For pixels at points in meshgrid (xx,yy,zz), calculate distance to target-points(s!) at (x_loc,y_loc,z_loc).
     Then apply against the jpdf function defined in outer scope - typically this is gaussian.norm.pdf to get a gaussian emission.
-
     Then sum across all of these distances to get the sum of multiple emitters.
 
+    Inputs: 
+        x_locs,y_locs,z_locs: x,y,z locations of point emitters
+        jxx,jyy,jzz : 3d grid of pixel locations as jax arrays.
+
+    '''
     return jnp.squeeze(jpdf(jnp.sqrt((jxx-x_locs)**2 + (jyy-y_locs)**2 + (jzz-z_locs)**2)).sum(axis=-1))
 
 
@@ -241,7 +246,7 @@ def test():
         print('Rendering...',i)
         working_arr = xr.zeros_like(final_arr)
         working_arr = working_arr.map_blocks(render_subimage,kwargs={'xyz_locs':xyz_locs},template=working_arr)
-        %time working_arr = working_arr.compute().chunk(chunks=chunks)
+        working_arr = working_arr.compute().chunk(chunks=chunks)
         final_arr = (final_arr + working_arr).compute().chunk(chunks=chunks)
         display(final_arr)
         
@@ -250,3 +255,8 @@ def test():
     axs[1].imshow(final_arr.sum(axis=1))
     axs[2].imshow(final_arr.sum(axis=2))
     plt.show()
+
+
+    
+if __name__ == "__main__":
+    test()

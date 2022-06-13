@@ -131,8 +131,7 @@ def test():
     channel_amplitude_xr.plot.imshow()
     plt.show()
 
-if __name__ == "__main__":
-    test()
+
 
     with ProgressBar():
         output = (emission_xr.map_blocks(launch_block,
@@ -140,3 +139,7 @@ if __name__ == "__main__":
                                         ).persist())
     print_dims('output')
     plot_xyzct(output)
+
+    
+if __name__ == "__main__":
+    test()
